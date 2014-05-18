@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; mode: python; -*-
-# Time-stamp: <2014-05-18 12:09:30 vk>
+# Time-stamp: <2014-05-18 13:06:23 vk>
 
 ## TODO:
-## * rename to vkmuttfilter
 ## * fix parts marked with «FIXXME»
 
 import os
@@ -13,12 +12,8 @@ import codecs
 import time
 from subprocess import call
 
-## debugging:   for setting a breakpoint:
-#pdb.set_trace()## FIXXME
-import pdb
-
 PROG_VERSION_NUMBER = u"0.1"
-PROG_VERSION_DATE = u"2014-05-15"
+PROG_VERSION_DATE = u"2014-05-18"
 
 
 EPILOG = u"\n\
@@ -40,11 +35,13 @@ ORGCONTACTSFILE = HOME + "/org/contacts.org"
 
 ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS = ":EMAIL:"
 ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS = ":ITOLDTHEM_EMAIL:"
+DEFAULT_EMAIL_ADDRESS = "mail@Karl-Voit.at"
 
 ## please configure vimrc for filetype mail accordingly:
+EDITOR = [os.environ.get('EDITOR','vim'), "'+/^$'"]
 EDITOR = os.environ.get('EDITOR','vim')
 
-FIRSTEMAILADDRESS=re.compile(u'(.*[< ])?(.+)@(.+)([> ].*)?', flags = re.U)
+FIRSTEMAILADDRESS=re.compile(u'(.*[< ])?(.+)@([^> ]+)([> ].*)?', flags = re.U)
 
 def error_exit(muttemailfilename, errorcode, message):
     """
@@ -90,17 +87,17 @@ def parseEmailHeader(log, emailfile):
                     return None
             elif inputline.startswith('From: '):
                 log.write('found \"From: \"; trying to parse email address ...\n')
-                address = extractFirstEmailaddress(inputline)
+                address = extractFirstEmailaddress(inputline).strip()
                 if address:
-                    log.write('found email address\n')
+                    log.write('found email address: [%s]\n' % (address))
                     header['from'] = address
                 else:
                     log.write('WARNING: found \"From: \" but failed to parse email address!\n')
             elif inputline.startswith('To: '):
                 log.write('found \"To: \"; trying to parse email address ...\n')
-                address = extractFirstEmailaddress(inputline)
+                address = extractFirstEmailaddress(inputline).strip()
                 if address:
-                    log.write('found email address\n')
+                    log.write('found email address: [%s]\n' % (address))
                     header['to'] = extractFirstEmailaddress(inputline)
                 else:
                     log.write('WARNING: found \"To: \" but failed to parse email address!\n')
@@ -139,80 +136,57 @@ def parseOrgContactsProperties(log, orgcontactsfile):
                     if len(current_contact[0]) > 0:
                         ## both contain content: MYNEWFROMADDRESS and RECIPIENT_ADDRESS
                         contact_properties.append(current_contact)
+                        log.write(str(current_contact) + '\n')
                 continue
             else:
                 if line.upper().startswith(ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS):
-                    number_of_mynewfromaddress+=1
                     emailaddress = extractFirstEmailaddress(line)
                     if emailaddress:
-                        current_contact[1] = emailaddress
+                        number_of_mynewfromaddress+=1
+                        current_contact[1] = emailaddress.strip()
                 elif line.upper().startswith(ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS):
                     emailaddress = extractFirstEmailaddress(line)
                     if emailaddress:
-                        current_contact[0].append(emailaddress)
+                        current_contact[0].append(emailaddress.strip())
 
     log.write('Found ' + str(number_of_property_drawers) + ' property drawers with ' + \
               str(number_of_mynewfromaddress) + ' mynewfromaddresses\n')
     return contact_properties
 
 
-def rewriteEmail(log, muttfilename, tempfilename):
+def rewriteEmail(log, muttfilename, tempfilename, itoldthem_email):
     
     log.write('re-writing email ...\n')
     with codecs.open(tempfilename, 'wb', encoding='utf-8') as output:
         for inputline in codecs.open(muttfilename, 'r', encoding='utf-8'):
-                if inputline.startswith("Subject: "):
-                        ## for testing purposes, just re-write subject line
-                        output.write(inputline.strip() + u" added by vkmuttfilter!" + '\n')
-                        output.write(u'X-muttfilter: modified subject line because FIXXME\n')
+                if inputline.startswith("From: "):
+                        output.write('From: ' + itoldthem_email + '\n')
+                        output.write(u'X-muttfilter: changed From address to ' + itoldthem_email + '\n')
                 else:
                     ## write unmodified
                     output.write(inputline)
     
     log.write('re-wrote email\n')
 
-    replaceFileWithOther(log, filetooverwrite, newfile, deleteold=False)
     
-    assert(os.path.isfile(muttfilename))
-    assert(os.path.isfile(tempfilename))
 
-    os.remove(muttfilename)
-    log.write('removed muttfilename; renaming tempfilename to muttfilename ...\n')
-    try:
-        #os.rename(tempfilename, muttfilename)  ## "[Errno 18] Invalid cross-device link"
-        ## FIXXME: replace mv-command with Python-move-method of any kind in order to stay OS-independent:
-        os.system('mv "%s" "%s"' % (tempfilename, muttfilename))
-    except Exception, e:
-        log.write("Rename failed: %s\n" % e)
-    log.write('renamed tempfilename to muttfilename\n')
-
-    assert(os.path.isfile(muttfilename))
-    assert(os.path.isfile(tempfilename) == False)
-    #log.write('after asserting new situation; updating utime ...\n')
-
-    #time.sleep(1)
-
-    ## manually updating mtime:
-    #os.utime(muttfilename, None)
-
-def replaceFileWithOther(log, filetooverwrite, newfile):
+def replaceFileWithOther(log, filetooverwrite, replacement):
     
     assert(os.path.isfile(filetooverwrite))
-    assert(os.path.isfile(newfile))
+    assert(os.path.isfile(replacement))
 
     os.remove(filetooverwrite)
-    log.write('removed filetooverwrite; renaming newfile to filetooverwrite ...\n')
+    log.write('removed filetooverwrite [%s]\nrenaming replacement [%s] to filetooverwrite ...\n' % (filetooverwrite, replacement))
     try:
-        #os.rename(newfile, filetooverwrite)  ## "[Errno 18] Invalid cross-device link"
+        #os.rename(replacement, filetooverwrite)  ## "[Errno 18] Invalid cross-device link"
         ## FIXXME: replace mv-command with Python-move-method of any kind in order to stay OS-independent:
-        os.system('mv "%s" "%s"' % (newfile, filetooverwrite))
+        os.system('mv "%s" "%s"' % (replacement, filetooverwrite))
     except Exception, e:
         log.write("Rename failed: %s\n" % e)
-    log.write('renamed newfile to filetooverwrite\n')
+    log.write('renamed replacement to filetooverwrite\n')
 
     assert(os.path.isfile(filetooverwrite))
-    assert(os.path.isfile(newfile) == False)
-    #log.write('after asserting new situation; updating utime ...\n')
+    assert(os.path.isfile(replacement) == False)
 
     
 def orgContactPropertiesLookup(log, contact_properties, to):
@@ -221,13 +195,19 @@ def orgContactPropertiesLookup(log, contact_properties, to):
     "to" and returns corresponding "ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS" if found. None if not.
     """
 
-    pass ## FIXXME: implement
+    for contact in contact_properties:
+        for address in contact[0]:
+            if to.lower() == address.lower():
+                return contact[1]
+
+    return None
 
 
 if __name__ == "__main__":
 
-    mydescription = u"FIXXME: Please refer to \n" + \
-        "https://github.com/novoid/FIXXME for more information."
+    mydescription = u"Modifying recipient email address in mutt emails if orgcontacts \n" + \
+                    "has a different from-address associated. Please refer to \n" + \
+                    "https://github.com/novoid/muttfilter.py for more information."
 
     with codecs.open(LOGFILENAME, 'wb', encoding='utf-8') as log:
 
@@ -252,13 +232,21 @@ if __name__ == "__main__":
             contact_properties = parseOrgContactsProperties(log, ORGCONTACTSFILE)
             log.write('found ' + str(len(contact_properties)) + \
                       ' contacts with RECIPIENT_ADDRESS(ES) and MYNEWFROMADDRESS\n')
-   
-            itoldthem_email = orgContactPropertiesLookup(log, contact_properties, emailheadercomponents['to'])
-            if emailheadercomponents['from'] == 'mail@karl-voit.at' and itoldthem_email:
-                log.write('I recognized that I should re-write the email ...\n')
-                rewriteEmail(log, muttfilename, TMPFILENAME)
-                log.write('re-wrote email, replacing original file with new one ...\n')
-                replaceFileWithOther(log, muttfilename, TMPFILENAME)
+
+            log.write('looking for recipient \"%s\" within contact data...\n' % (emailheadercomponents['to'].strip()))
+            itoldthem_email = orgContactPropertiesLookup(log, contact_properties, emailheadercomponents['to'].strip())
+            if itoldthem_email:
+                log.write('found matching RECIPIENT_ADDRESS and MYNEWFROMADDRESS; checking current From (if it is unmodified) ...\n')
+                if emailheadercomponents['from'].lower() == DEFAULT_EMAIL_ADDRESS.lower():
+                    log.write('Yes, I *re-write/modify the email* ...   (with tmpfile [%s] and muttfilename[%s])\n' % \
+                              (TMPFILENAME, muttfilename))
+                    rewriteEmail(log, muttfilename, TMPFILENAME, itoldthem_email)
+                    log.write('re-wrote email, replacing original file with new one ...\n')
+                    replaceFileWithOther(log, muttfilename, TMPFILENAME)
+                else:
+                    log.write('found modified From [%s]; *not* re-writing email\n' % (emailheadercomponents['from']))
+            else:
+                log.write('found no matching RECIPIENT_ADDRESS and MYNEWFROMADDRESS; *not* re-writing email\n')
                 
             log.write('calling EDITOR ...\n')
             call([EDITOR, muttfilename])
