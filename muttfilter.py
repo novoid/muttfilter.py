@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; mode: python; -*-
-# Time-stamp: <2014-05-18 11:35:26 vk>
+# Time-stamp: <2014-05-18 12:09:30 vk>
 
 ## TODO:
 ## * rename to vkmuttfilter
@@ -30,6 +30,7 @@ EPILOG = u"\n\
 
 ## OLD: set editor="vim -c 'set tw=68 et' '+/^$'"
 ## NEW: set editor="/home/karl/bin/python /home/karl/bin/vkmuttfilter.py"
+## NEW: set editor="/usr/bin/python /home/vk/src/muttfilter.py/muttfilter.py"
 
 HOME = os.path.expanduser("~")
 
@@ -37,6 +38,8 @@ TMPFILENAME = HOME + "/tmp/mutt-vkmuttfilter-tempfile-which-can-be-deleted.txt"
 LOGFILENAME = HOME + "/tmp/mutt-vkmuttfilter.log"
 ORGCONTACTSFILE = HOME + "/org/contacts.org"
 
+ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS = ":EMAIL:"
+ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS = ":ITOLDTHEM_EMAIL:"
 
 ## please configure vimrc for filetype mail accordingly:
 EDITOR = os.environ.get('EDITOR','vim')
@@ -108,8 +111,49 @@ def parseEmailHeader(log, emailfile):
                     
 def parseOrgContactsProperties(log, orgcontactsfile):
 
+    SEARCHING_PROPERTY_DRAWER = 0
+    IN_PROPERTY_DRAWER = 1
+    state = SEARCHING_PROPERTY_DRAWER
+
+    contact_properties = []  ## consists of list of current_contacts as below
+    current_contact = [[], None]  ## consists of list of RECIPIENT_ADDRESSES and one MYNEWFROMADDRESS
+
+    number_of_property_drawers = 0
+    number_of_mynewfromaddress = 0
     
-    pass ## FIXXME: implement
+    for line in codecs.open(orgcontactsfile, 'r', encoding='utf-8'):
+        
+        if state==SEARCHING_PROPERTY_DRAWER:
+            if line.upper().startswith(':PROPERTIES:'):
+                number_of_property_drawers+=1
+                state=IN_PROPERTY_DRAWER
+                current_contact = [[], None]
+            else:
+                continue
+            
+        elif state==IN_PROPERTY_DRAWER:
+            if line.upper().startswith(':END:'):
+                state=SEARCHING_PROPERTY_DRAWER
+                if current_contact[1]:
+                    ## found MYNEWFROMADDRESS
+                    if len(current_contact[0]) > 0:
+                        ## both contain content: MYNEWFROMADDRESS and RECIPIENT_ADDRESS
+                        contact_properties.append(current_contact)
+                continue
+            else:
+                if line.upper().startswith(ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS):
+                    number_of_mynewfromaddress+=1
+                    emailaddress = extractFirstEmailaddress(line)
+                    if emailaddress:
+                        current_contact[1] = emailaddress
+                elif line.upper().startswith(ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS):
+                    emailaddress = extractFirstEmailaddress(line)
+                    if emailaddress:
+                        current_contact[0].append(emailaddress)
+
+    log.write('Found ' + str(number_of_property_drawers) + ' property drawers with ' + \
+              str(number_of_mynewfromaddress) + ' mynewfromaddresses\n')
+    return contact_properties
 
 
 def rewriteEmail(log, muttfilename, tempfilename):
@@ -174,7 +218,7 @@ def replaceFileWithOther(log, filetooverwrite, newfile):
 def orgContactPropertiesLookup(log, contact_properties, to):
     """
     Skims through the parsed OrgContacts properties and searches for
-    "to" and returns corresponding "ITOLDTHEM_EMAIL" if found. None if not.
+    "to" and returns corresponding "ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS" if found. None if not.
     """
 
     pass ## FIXXME: implement
@@ -202,8 +246,12 @@ if __name__ == "__main__":
             if not emailheadercomponents:
                 error_exit(muttfilename, 10, 'ERROR: could not parse \"from\" and/or \"to\" from email header! :-O\n')
 
-            ## FIXXME: parsing contacts.org to get pairs of EMAIL and ITOLDTHEM
+            ## parsing contacts.org to get pairs of
+            ## ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS and
+            ## ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS
             contact_properties = parseOrgContactsProperties(log, ORGCONTACTSFILE)
+            log.write('found ' + str(len(contact_properties)) + \
+                      ' contacts with RECIPIENT_ADDRESS(ES) and MYNEWFROMADDRESS\n')
    
             itoldthem_email = orgContactPropertiesLookup(log, contact_properties, emailheadercomponents['to'])
             if emailheadercomponents['from'] == 'mail@karl-voit.at' and itoldthem_email:
