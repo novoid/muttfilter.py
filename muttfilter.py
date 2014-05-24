@@ -11,6 +11,7 @@ from sys import stdin, exit, argv, exit
 import codecs
 import time
 from subprocess import call
+from shutil import move
 
 PROG_VERSION_NUMBER = u"0.1"
 PROG_VERSION_DATE = u"2014-05-18"
@@ -38,9 +39,13 @@ ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS = ":ITOLDTHEM_EMAIL:"
 DEFAULT_EMAIL_ADDRESS = "mail@Karl-Voit.at"
 
 ## please configure vimrc for filetype mail accordingly:
-EDITOR = [os.environ.get('EDITOR','vim'), "'+/^$'"]
 EDITOR = os.environ.get('EDITOR','vim')
 
+## FIXXME: editor parameters (go to first line after the first empty one) are not working:
+EDITORPARAMS = "+'/^$/+1'"
+EDITORPARAMS = '+\'/^\$/+1\''
+
+## FIXXME: fix RegEx to match FIRST email address; for now, it gets last one!
 FIRSTEMAILADDRESS=re.compile(u'(.*[< ])?(.+)@([^> ]+)([> ].*)?', flags = re.U)
 
 def error_exit(muttemailfilename, errorcode, message):
@@ -161,7 +166,7 @@ def rewriteEmail(log, muttfilename, tempfilename, itoldthem_email):
         for inputline in codecs.open(muttfilename, 'r', encoding='utf-8'):
                 if inputline.startswith("From: "):
                         output.write('From: ' + itoldthem_email + '\n')
-                        output.write(u'X-muttfilter: changed From address to ' + itoldthem_email + '\n')
+                        output.write(u'X-muttfilter: changed From-address to: ' + itoldthem_email + '\n')
                 else:
                     ## write unmodified
                     output.write(inputline)
@@ -179,8 +184,13 @@ def replaceFileWithOther(log, filetooverwrite, replacement):
     log.write('removed filetooverwrite [%s]\nrenaming replacement [%s] to filetooverwrite ...\n' % (filetooverwrite, replacement))
     try:
         #os.rename(replacement, filetooverwrite)  ## "[Errno 18] Invalid cross-device link"
-        ## FIXXME: replace mv-command with Python-move-method of any kind in order to stay OS-independent:
-        os.system('mv "%s" "%s"' % (replacement, filetooverwrite))
+        #os.system('mv "%s" "%s"' % (replacement, filetooverwrite))  ## *dirty* workaround! replaced by:
+        src_basename = os.path.basename(replacement)
+        dst_basename = os.path.basename(filetooverwrite)
+        src_dirname = os.path.dirname(replacement)
+        dst_dirname = os.path.dirname(filetooverwrite)
+        os.rename(replacement, os.path.join(src_dirname, dst_basename))
+        move(os.path.join(src_dirname, dst_basename), dst_dirname)
     except Exception, e:
         log.write("Rename failed: %s\n" % e)
     log.write('renamed replacement to filetooverwrite\n')
@@ -249,6 +259,7 @@ if __name__ == "__main__":
                 log.write('found no matching RECIPIENT_ADDRESS and MYNEWFROMADDRESS; *not* re-writing email\n')
                 
             log.write('calling EDITOR ...\n')
+            #call([EDITOR, EDITORPARAMS, muttfilename])
             call([EDITOR, muttfilename])
             log.write('after EDITOR\n')
 
