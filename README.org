@@ -1,0 +1,73 @@
+## -*- coding: utf-8;mode: org;  -*-
+## Time-stamp: <2015-02-01 13:10:39 vk>
+## This file is best viewed with GNU Emacs Org-mode: http://orgmode.org/
+
+* Modifying FROM-email address in mutt emails
+
+This script is using [[http://orgmode.org][Emacs Org-mode]] [[https://julien.danjou.info/projects/emacs-packages#org-contacts][Org-contacts]] together with the [[https://en.wikipedia.org/wiki/Email_client][MUA]]
+[[http://www.mutt.org/][mutt]].
+
+Let's take a look at an example Org-contacts entry which looks like that:
+
+: ** Bob Simpson                :research:chi09:BobSimpson:
+: :PROPERTIES:
+: :TYPE: 
+: :TITLE: Dr.
+: :EMAIL: Bob.Simpson@example.com
+: :oldEMAIL: Bob.Simpson@outdated.example.com
+: :URL: http://example.com/bob
+: :MOBILE: 
+: :HOMEPHONE: 
+: :WORKPHONE: 
+: :PHONE: 
+: :COMPANY: This cool research company
+: :STREET: 42 Weirdstreet
+: :POSTALCODE: 12345
+: :CITY: Denver
+: :COUNTRY: USA
+: :PHOTOGRAPH: [[photo:BobSimpson.jpg]]
+: :BORN: 1970-12-31
+: :ITOLDTHEM_EMAIL: chi09@MY-DOMAIN.at
+: :ITOLDTHEM_ADDRESS: 
+: :ITOLDTHEM_PHONE: 
+: :ADDRESS_CHANGE_METHOD: email
+: :CREATED:  [2015-01-30 Fri 17:51]
+: :END:
+: 
+: - first contact: CHI conference 2009
+:   - we had a nice lunch time together
+
+Whenever I write an email to Bob (property ~:EMAIL:~), I would like to
+use ~chi09@MY-DOMAIN.at~ (property ~:ITOLDTHEM_EMAIL:~) instead of my
+standard email address. 
+
+This way, I can give away contact-specific email addresses. That's
+quite handy when you've got a [[https://en.wikipedia.org/wiki/Catch-all][catch-all email domain]] or you are using
+[[http://gmailblog.blogspot.co.at/2008/03/2-hidden-ways-to-get-more-from-your.html][some more or less hidden features of cloud-based email services]].
+
+** How does it work? How do I install it?
+
+Using mutt as email client, you can define your own editor. For me, I
+like to compose emails using [[http://www.vim.org/][gVim]]. Therefore, my ~.mutt~ config file
+usually contains the line:
+
+: set editor=vim
+
+If you replace this line by ...
+
+: set editor="/usr/bin/python /home/USER/bin/muttfilter.py"
+
+... you can use this script as a wrapper function. It parses your
+Org-mode file for contacts, extracts their email addresses, and your
+corresponding from-addresses. It compares the first from-address
+from your current email and does a look-up. If it finds a
+corresponding pair of entries in your Org-contacts file, the
+~FROM:~-address gets replaced by the address of your choice.
+
+After this, the gVim editor is opened to let you compose your email as
+usual.
+
+For debugging purposes, a log-file gets written to ~/tmp/~ which is
+removed when no error occured. Please modify its path if you got
+security concerns about that.
+
