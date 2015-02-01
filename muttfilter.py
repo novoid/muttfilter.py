@@ -1,23 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; mode: python; -*-
-# Time-stamp: <2014-05-18 13:06:23 vk>
+# Time-stamp: <2015-02-01 12:46:03 vk>
 
 ## TODO:
 ## * fix parts marked with «FIXXME»
 
 import os
 import re
-from sys import stdin, exit, argv, exit
+from sys import exit, argv, exit
 import codecs
-import time
 from subprocess import call
 from shutil import move
 
-PROG_VERSION_NUMBER = u"0.1"
-PROG_VERSION_DATE = u"2014-05-18"
+PROG_VERSION_NUMBER = u"0.2"
+PROG_VERSION_DATE = u"2015-02-01"
 
-
-EPILOG = u"\n\
+EPILOG = u"Modifying FROM-email address in mutt emails if corresponding org-contact \n\
+entry has a different from-address associated. Please refer to \n\
+https://github.com/novoid/muttfilter.py for more information.\n\
+\n\
   :copyright:  (c) 2015 and following by Karl Voit <tools@Karl-Voit.at>\n\
   :license:    GPL v3 or any later version\n\
   :URL:       \n\
@@ -30,14 +31,14 @@ EPILOG = u"\n\
 
 HOME = os.path.expanduser("~")
 
-TMPFILENAME = HOME + "/tmp/mutt-vkmuttfilter-tempfile-which-can-be-deleted.txt"
-LOGFILENAME = HOME + "/tmp/mutt-vkmuttfilter.log"
-ORGCONTACTSFILE = HOME + "/org/contacts.org"
+TMPFILENAME = HOME + "/tmp/mutt-vkmuttfilter-tempfile-which-can-be-deleted.txt"  ## FIXXME: use Python method to find temporary file
+LOGFILENAME = HOME + "/tmp/mutt-vkmuttfilter.log"  ## FIXXME: use Python method to find temporary file
+ORGCONTACTSFILE = HOME + "/org/contacts.org"  ## Path to the org-mode file containing the contact information
 
-ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS = ":EMAIL:"
-ORGCONTACTS_PROPERTY_OLD_RECIPIENT_ADDRESS = ":oldEMAIL:"
-ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS = ":ITOLDTHEM_EMAIL:"
-DEFAULT_EMAIL_ADDRESS = "mail@Karl-Voit.at"
+ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS = ":EMAIL:"  ## Looking for this property in Org-mode files to gather email addresses for contacts
+ORGCONTACTS_PROPERTY_OLD_RECIPIENT_ADDRESS = ":oldEMAIL:"  ## same as ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS but for outdated addresses
+ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS = ":ITOLDTHEM_EMAIL:"  ## these property values holds my own email address I use to contact this contact
+DEFAULT_EMAIL_ADDRESS = u"mail" + u"@" + u"Ka" + u"rl" + u"-Vo" + u"it.at"  ## use this email address when ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS is empty
 
 ## please configure vimrc for filetype mail accordingly:
 EDITOR = os.environ.get('EDITOR','vim')
@@ -215,10 +216,6 @@ def orgContactPropertiesLookup(log, contact_properties, to):
 
 
 if __name__ == "__main__":
-
-    mydescription = u"Modifying recipient email address in mutt emails if orgcontacts \n" + \
-                    "has a different from-address associated. Please refer to \n" + \
-                    "https://github.com/novoid/muttfilter.py for more information."
 
     with codecs.open(LOGFILENAME, 'wb', encoding='utf-8') as log:
 
