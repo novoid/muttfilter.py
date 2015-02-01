@@ -35,6 +35,7 @@ LOGFILENAME = HOME + "/tmp/mutt-vkmuttfilter.log"
 ORGCONTACTSFILE = HOME + "/org/contacts.org"
 
 ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS = ":EMAIL:"
+ORGCONTACTS_PROPERTY_OLD_RECIPIENT_ADDRESS = ":oldEMAIL:"
 ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS = ":ITOLDTHEM_EMAIL:"
 DEFAULT_EMAIL_ADDRESS = "mail@Karl-Voit.at"
 
@@ -149,7 +150,7 @@ def parseOrgContactsProperties(log, orgcontactsfile):
                     if emailaddress:
                         number_of_mynewfromaddress+=1
                         current_contact[1] = emailaddress.strip()
-                elif line.upper().startswith(ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS):
+                elif line.upper().startswith(ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS) or line.upper().startswith(ORGCONTACTS_PROPERTY_OLD_RECIPIENT_ADDRESS):
                     emailaddress = extractFirstEmailaddress(line)
                     if emailaddress:
                         current_contact[0].append(emailaddress.strip())
@@ -237,7 +238,7 @@ if __name__ == "__main__":
                 error_exit(muttfilename, 10, 'ERROR: could not parse \"from\" and/or \"to\" from email header! :-O\n')
 
             ## parsing contacts.org to get pairs of
-            ## ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS and
+            ## ORGCONTACTS_PROPERTY_(OLD_)RECIPIENT_ADDRESS and
             ## ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS
             contact_properties = parseOrgContactsProperties(log, ORGCONTACTSFILE)
             log.write('found ' + str(len(contact_properties)) + \
