@@ -1,1 +1,3 @@
 testdata
+test_current_email.sh
+test_outdated_email.sh
