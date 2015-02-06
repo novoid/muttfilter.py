@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; mode: python; -*-
-# Time-stamp: <2015-02-01 12:46:03 vk>
+# Time-stamp: <2015-02-06 18:33:13 vk>
 
 ## TODO:
 ## * fix parts marked with «FIXXME»
 
 import os
 import re
-from sys import exit, argv, exit
+from sys import exit, argv
 import codecs
 from subprocess import call
 from shutil import move
