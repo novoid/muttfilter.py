@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; mode: python; -*-
-# Time-stamp: <2015-02-06 19:25:47 vk>
+# Time-stamp: <2015-02-06 19:33:36 vk>
 
 ## TODO:
 ## * fix parts marked with «FIXXME»
@@ -31,24 +31,24 @@ https://github.com/novoid/muttfilter.py > README.org for usage and more informat
 
 HOME = os.path.expanduser("~")
 
-TMPFILENAME = HOME + "/tmp/mutt-vkmuttfilter-tempfile-which-can-be-deleted.txt"  ## FIXXME: use Python method to find temporary file
-LOGFILENAME = HOME + "/tmp/mutt-vkmuttfilter.log"  ## FIXXME: use Python method to find temporary file
-ORGCONTACTSFILE = HOME + "/org/contacts.org"  ## Path to the org-mode file containing the contact information
+TMPFILENAME = HOME + "/tmp/mutt-vkmuttfilter-tempfile-which-can-be-deleted.txt"  # FIXXME: use Python method to find temporary file
+LOGFILENAME = HOME + "/tmp/mutt-vkmuttfilter.log"  # FIXXME: use Python method to find temporary file
+ORGCONTACTSFILE = HOME + "/org/contacts.org"  # Path to the org-mode file containing the contact information
 
-ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS = ":EMAIL:"  ## Looking for this property in Org-mode files to gather email addresses for contacts
-ORGCONTACTS_PROPERTY_OLD_RECIPIENT_ADDRESS = ":OLDEMAIL:"  ## same as ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS but for outdated addresses
-ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS = ":ITOLDTHEM_EMAIL:"  ## these property values holds my own email address I use to contact this contact
-DEFAULT_EMAIL_ADDRESS = u"mail" + u"@" + u"Ka" + u"rl" + u"-Vo" + u"it.at"  ## use this email address when ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS is empty
+ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS = ":EMAIL:"  # Looking for this property in Org-mode files to gather email addresses for contacts
+ORGCONTACTS_PROPERTY_OLD_RECIPIENT_ADDRESS = ":OLDEMAIL:"  # same as ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS but for outdated addresses
+ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS = ":ITOLDTHEM_EMAIL:"  # these property values holds my own email address I use to contact this contact
+DEFAULT_EMAIL_ADDRESS = u"mail" + u"@" + u"Ka" + u"rl" + u"-Vo" + u"it.at"  # use this email address when ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS is empty
 
 ## please configure vimrc for filetype mail accordingly:
-EDITOR = os.environ.get('EDITOR','vim')
+EDITOR = os.environ.get('EDITOR', 'vim')
 
 ## FIXXME: editor parameters (go to first line after the first empty one) are not working:
 EDITORPARAMS = "+'/^$/+1'"
 EDITORPARAMS = '+\'/^\$/+1\''
 
 ## FIXXME: fix RegEx to match FIRST email address; for now, it gets last one!
-FIRSTEMAILADDRESS=re.compile(u'(.*[< ])?(.+)@([^> ]+)([> ].*)?', flags = re.U)
+FIRSTEMAILADDRESS = re.compile(u'(.*[< ])?(.+)@([^> ]+)([> ].*)?', flags=re.U)
 
 
 def error_exit(muttemailfilename, errorcode, message):
@@ -68,7 +68,7 @@ def error_exit(muttemailfilename, errorcode, message):
 
     exit(errorcode)
 
-    
+
 def extractFirstEmailaddress(inputline):
     """
     Parses a string and extracts the first email address found.
@@ -127,25 +127,25 @@ def parseOrgContactsProperties(log, orgcontactsfile):
     IN_PROPERTY_DRAWER = 1
     state = SEARCHING_PROPERTY_DRAWER
 
-    contact_properties = []  ## consists of list of current_contacts as below
-    current_contact = [[], None]  ## consists of list of RECIPIENT_ADDRESSES and one MYNEWFROMADDRESS
+    contact_properties = []  # consists of list of current_contacts as below
+    current_contact = [[], None]  # consists of list of RECIPIENT_ADDRESSES and one MYNEWFROMADDRESS
 
     number_of_property_drawers = 0
     number_of_mynewfromaddress = 0
 
     for line in codecs.open(orgcontactsfile, 'r', encoding='utf-8'):
 
-        if state==SEARCHING_PROPERTY_DRAWER:
+        if state == SEARCHING_PROPERTY_DRAWER:
             if line.upper().startswith(':PROPERTIES:'):
-                number_of_property_drawers+=1
-                state=IN_PROPERTY_DRAWER
+                number_of_property_drawers += 1
+                state = IN_PROPERTY_DRAWER
                 current_contact = [[], None]
             else:
                 continue
 
-        elif state==IN_PROPERTY_DRAWER:
+        elif state == IN_PROPERTY_DRAWER:
             if line.upper().startswith(':END:'):
-                state=SEARCHING_PROPERTY_DRAWER
+                state = SEARCHING_PROPERTY_DRAWER
                 if current_contact[1]:
                     ## found MYNEWFROMADDRESS
                     if len(current_contact[0]) > 0:
@@ -157,14 +157,15 @@ def parseOrgContactsProperties(log, orgcontactsfile):
                 if line.upper().startswith(ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS):
                     emailaddress = extractFirstEmailaddress(line)
                     if emailaddress:
-                        number_of_mynewfromaddress+=1
+                        number_of_mynewfromaddress += 1
                         current_contact[1] = emailaddress.strip()
-                elif line.upper().startswith(ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS) or line.upper().startswith(ORGCONTACTS_PROPERTY_OLD_RECIPIENT_ADDRESS):
+                elif line.upper().startswith(ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS) or \
+                     line.upper().startswith(ORGCONTACTS_PROPERTY_OLD_RECIPIENT_ADDRESS):
                     emailaddress = extractFirstEmailaddress(line)
                     if emailaddress:
                         current_contact[0].append(emailaddress.strip())
 
-    log.write('Found ' + str(number_of_property_drawers) + ' property drawers with ' + \
+    log.write('Found ' + str(number_of_property_drawers) + ' property drawers with ' +
               str(number_of_mynewfromaddress) + ' mynewfromaddresses\n')
     return contact_properties
 
@@ -184,7 +185,6 @@ def rewriteEmail(log, muttfilename, tempfilename, itoldthem_email):
     log.write('re-wrote email\n')
 
 
-
 def replaceFileWithOther(log, filetooverwrite, replacement):
 
     assert(os.path.isfile(filetooverwrite))
@@ -202,8 +202,8 @@ def replaceFileWithOther(log, filetooverwrite, replacement):
         log.write("Rename failed: %s\n" % e)
     log.write('renamed replacement to filetooverwrite\n')
 
-    assert(os.path.isfile(filetooverwrite)) ## FIXXME: there is an issue when filetooverwrite has no path
-    assert(os.path.isfile(replacement) == False)
+    assert(os.path.isfile(filetooverwrite))  # FIXXME: there is an issue when filetooverwrite has no path
+    assert(os.path.isfile(replacement) is False)
 
 
 def orgContactPropertiesLookup(log, contact_properties, to):
@@ -227,9 +227,9 @@ if __name__ == "__main__":
         log.write('=========================\nscript called\n')
         try:
 
-            if len(argv)<2:
+            if len(argv) < 2:
                 error_exit(False, 1, 'ERROR: no file given for argument 1\n')
-                
+
             muttfilename = argv[1]
             if not os.path.isfile(muttfilename):
                 error_exit(False, 2, "ERROR: argument string \"%s\" is not a file" % muttfilename)
@@ -245,7 +245,7 @@ if __name__ == "__main__":
             ## ORGCONTACTS_PROPERTY_(OLD_)RECIPIENT_ADDRESS and
             ## ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS
             contact_properties = parseOrgContactsProperties(log, ORGCONTACTSFILE)
-            log.write('found ' + str(len(contact_properties)) + \
+            log.write('found ' + str(len(contact_properties)) +
                       ' contacts with RECIPIENT_ADDRESS(ES) and MYNEWFROMADDRESS\n')
 
             log.write('looking for recipient \"%s\" within contact data...\n' % (emailheadercomponents['to'].strip()))
@@ -253,7 +253,7 @@ if __name__ == "__main__":
             if itoldthem_email:
                 log.write('found matching RECIPIENT_ADDRESS and MYNEWFROMADDRESS; checking current From (if it is unmodified) ...\n')
                 if emailheadercomponents['from'].lower() == DEFAULT_EMAIL_ADDRESS.lower():
-                    log.write('Yes, I *re-write/modify the email* ...   (with tmpfile [%s] and muttfilename[%s])\n' % \
+                    log.write('Yes, I *re-write/modify the email* ...   (with tmpfile [%s] and muttfilename[%s])\n' %
                               (TMPFILENAME, muttfilename))
                     rewriteEmail(log, muttfilename, TMPFILENAME, itoldthem_email)
                     log.write('re-wrote email, replacing original file with new one ...\n')
@@ -270,12 +270,11 @@ if __name__ == "__main__":
 
             log.write('end.\n')
 
-
         except KeyboardInterrupt:
 
             pass
 
-        os.remove(LOGFILENAME) ## delete it if no error happened!
+        os.remove(LOGFILENAME)  # delete it if no error happened!
 
 ## END OF FILE #################################################################
 # Local Variables:
