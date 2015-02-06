@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; mode: python; -*-
-# Time-stamp: <2015-02-06 19:01:07 vk>
+# Time-stamp: <2015-02-06 19:22:05 vk>
 
 ## TODO:
 ## * fix parts marked with «FIXXME»
@@ -36,7 +36,7 @@ LOGFILENAME = HOME + "/tmp/mutt-vkmuttfilter.log"  ## FIXXME: use Python method 
 ORGCONTACTSFILE = HOME + "/org/contacts.org"  ## Path to the org-mode file containing the contact information
 
 ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS = ":EMAIL:"  ## Looking for this property in Org-mode files to gather email addresses for contacts
-ORGCONTACTS_PROPERTY_OLD_RECIPIENT_ADDRESS = ":oldEMAIL:"  ## same as ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS but for outdated addresses
+ORGCONTACTS_PROPERTY_OLD_RECIPIENT_ADDRESS = ":OLDEMAIL:"  ## same as ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS but for outdated addresses
 ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS = ":ITOLDTHEM_EMAIL:"  ## these property values holds my own email address I use to contact this contact
 DEFAULT_EMAIL_ADDRESS = u"mail" + u"@" + u"Ka" + u"rl" + u"-Vo" + u"it.at"  ## use this email address when ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS is empty
 
@@ -93,6 +93,7 @@ def parseEmailHeader(log, emailfile):
     header = {}
 
     for inputline in codecs.open(emailfile, 'r', encoding='utf-8'):
+
             if inputline == '\n':
                 if 'from' in header.keys() and 'to' in header.keys():
                     log.write('found \"from\" and \"to\" in header\n')
@@ -192,9 +193,6 @@ def replaceFileWithOther(log, filetooverwrite, replacement):
     os.remove(filetooverwrite)
     log.write('removed filetooverwrite [%s]\nrenaming replacement [%s] to filetooverwrite ...\n' % (filetooverwrite, replacement))
     try:
-        #os.rename(replacement, filetooverwrite)  ## "[Errno 18] Invalid cross-device link"
-        #os.system('mv "%s" "%s"' % (replacement, filetooverwrite))  ## *dirty* workaround! replaced by:
-        src_basename = os.path.basename(replacement)
         dst_basename = os.path.basename(filetooverwrite)
         src_dirname = os.path.dirname(replacement)
         dst_dirname = os.path.dirname(filetooverwrite)
@@ -204,8 +202,7 @@ def replaceFileWithOther(log, filetooverwrite, replacement):
         log.write("Rename failed: %s\n" % e)
     log.write('renamed replacement to filetooverwrite\n')
 
-    import pdb; pdb.set_trace()
-    assert(os.path.isfile(filetooverwrite))
+    assert(os.path.isfile(filetooverwrite)) ## FIXXME: there is an issue when filetooverwrite has no path
     assert(os.path.isfile(replacement) == False)
 
 
