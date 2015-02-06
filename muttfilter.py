@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; mode: python; -*-
-# Time-stamp: <2015-02-06 19:22:05 vk>
+# Time-stamp: <2015-02-06 19:25:47 vk>
 
 ## TODO:
 ## * fix parts marked with «FIXXME»
@@ -12,8 +12,8 @@ import codecs
 from subprocess import call
 from shutil import move
 
-PROG_VERSION_NUMBER = u"0.2"
-PROG_VERSION_DATE = u"2015-02-01"
+PROG_VERSION_NUMBER = u"0.3"
+PROG_VERSION_DATE = u"2015-02-06"
 
 EPILOG = u"Modifying FROM-email address in mutt emails if corresponding org-contact \n\
 entry has a different from-address associated. Please refer to \n\
