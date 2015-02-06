@@ -1,5 +1,5 @@
 ## -*- coding: utf-8;mode: org;  -*-
-## Time-stamp: <2015-02-01 13:10:39 vk>
+## Time-stamp: <2015-02-06 19:19:10 vk>
 ## This file is best viewed with GNU Emacs Org-mode: http://orgmode.org/
 
 * Modifying FROM-email address in mutt emails
@@ -67,7 +67,15 @@ corresponding pair of entries in your Org-contacts file, the
 After this, the gVim editor is opened to let you compose your email as
 usual.
 
-For debugging purposes, a log-file gets written to ~/tmp/~ which is
-removed when no error occured. Please modify its path if you got
-security concerns about that.
+For debugging purposes, a log-file gets written to ~LOGFILENAME~ (see
+code!) which is removed when no error occured. Please modify its path
+if you got security concerns about that.
+
+You might also take a look at following variables and adapt them to
+your requirements:
+
+- ~TMPFILENAME~: path to temporary file
+- ~ORGCONTACTSFILE~: path to your Org-mode file containing the org-contacts-entries
+- ~DEFAULT_EMAIL_ADDRESS~: your default email address
+- ~EDITOR~: your default editor
 
