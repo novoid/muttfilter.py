@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; mode: python; -*-
-# Time-stamp: <2015-02-06 18:33:13 vk>
+# Time-stamp: <2015-02-06 19:01:07 vk>
 
 ## TODO:
 ## * fix parts marked with «FIXXME»
 
 import os
 import re
-from sys import exit, argv
+from sys import exit, argv, stdout
 import codecs
 from subprocess import call
 from shutil import move
@@ -17,7 +17,7 @@ PROG_VERSION_DATE = u"2015-02-01"
 
 EPILOG = u"Modifying FROM-email address in mutt emails if corresponding org-contact \n\
 entry has a different from-address associated. Please refer to \n\
-https://github.com/novoid/muttfilter.py for more information.\n\
+https://github.com/novoid/muttfilter.py > README.org for usage and more information.\n\
 \n\
   :copyright:  (c) 2015 and following by Karl Voit <tools@Karl-Voit.at>\n\
   :license:    GPL v3 or any later version\n\
@@ -50,19 +50,25 @@ EDITORPARAMS = '+\'/^\$/+1\''
 ## FIXXME: fix RegEx to match FIRST email address; for now, it gets last one!
 FIRSTEMAILADDRESS=re.compile(u'(.*[< ])?(.+)@([^> ]+)([> ].*)?', flags = re.U)
 
+
 def error_exit(muttemailfilename, errorcode, message):
     """
     Quits program (not deleting logfile).
     """
 
-    log.write('ERROR ' + str(errorcode) + ': ' + message + '\n')
-    
-    ## replacing tmpfile with log:
-    log.flush()
-    replaceFileWithOther(log, muttemailfilename, LOGFILENAME)
+    log.write('\nERROR ' + str(errorcode) + ': ' + message + '\n')
+    if muttemailfilename:
+        log.flush()
+        ## replacing tmpfile with log:
+        replaceFileWithOther(log, muttemailfilename, LOGFILENAME)
+    else:
+        print '\nERROR ' + str(errorcode) + ': ' + message + '\n\n'
+        print EPILOG
+        stdout.flush()
 
     exit(errorcode)
 
+    
 def extractFirstEmailaddress(inputline):
     """
     Parses a string and extracts the first email address found.
@@ -77,6 +83,7 @@ def extractFirstEmailaddress(inputline):
         else:
             ## not all email components found:
             return None
+
 
 def parseEmailHeader(log, emailfile):
     """
@@ -112,7 +119,7 @@ def parseEmailHeader(log, emailfile):
     log.write('WARNING: should never be reached (parseEmailHeader)\n')
     return None
 
-                    
+
 def parseOrgContactsProperties(log, orgcontactsfile):
 
     SEARCHING_PROPERTY_DRAWER = 0
@@ -124,9 +131,9 @@ def parseOrgContactsProperties(log, orgcontactsfile):
 
     number_of_property_drawers = 0
     number_of_mynewfromaddress = 0
-    
+
     for line in codecs.open(orgcontactsfile, 'r', encoding='utf-8'):
-        
+
         if state==SEARCHING_PROPERTY_DRAWER:
             if line.upper().startswith(':PROPERTIES:'):
                 number_of_property_drawers+=1
@@ -134,7 +141,7 @@ def parseOrgContactsProperties(log, orgcontactsfile):
                 current_contact = [[], None]
             else:
                 continue
-            
+
         elif state==IN_PROPERTY_DRAWER:
             if line.upper().startswith(':END:'):
                 state=SEARCHING_PROPERTY_DRAWER
@@ -162,7 +169,7 @@ def parseOrgContactsProperties(log, orgcontactsfile):
 
 
 def rewriteEmail(log, muttfilename, tempfilename, itoldthem_email):
-    
+
     log.write('re-writing email ...\n')
     with codecs.open(tempfilename, 'wb', encoding='utf-8') as output:
         for inputline in codecs.open(muttfilename, 'r', encoding='utf-8'):
@@ -172,13 +179,13 @@ def rewriteEmail(log, muttfilename, tempfilename, itoldthem_email):
                 else:
                     ## write unmodified
                     output.write(inputline)
-    
+
     log.write('re-wrote email\n')
 
-    
+
 
 def replaceFileWithOther(log, filetooverwrite, replacement):
-    
+
     assert(os.path.isfile(filetooverwrite))
     assert(os.path.isfile(replacement))
 
@@ -197,10 +204,11 @@ def replaceFileWithOther(log, filetooverwrite, replacement):
         log.write("Rename failed: %s\n" % e)
     log.write('renamed replacement to filetooverwrite\n')
 
+    import pdb; pdb.set_trace()
     assert(os.path.isfile(filetooverwrite))
     assert(os.path.isfile(replacement) == False)
 
-    
+
 def orgContactPropertiesLookup(log, contact_properties, to):
     """
     Skims through the parsed OrgContacts properties and searches for
@@ -221,12 +229,14 @@ if __name__ == "__main__":
 
         log.write('=========================\nscript called\n')
         try:
-           
+
+            if len(argv)<2:
+                error_exit(False, 1, 'ERROR: no file given for argument 1\n')
+                
             muttfilename = argv[1]
             if not os.path.isfile(muttfilename):
-                print "ERROR: no file found as parameter 1"
-                log.write('ERROR: no file found as parameter 1\n')
-    
+                error_exit(False, 2, "ERROR: argument string \"%s\" is not a file" % muttfilename)
+
             log.write('EDITOR[%s] muttfilename[%s] TMPFILENAME[%s]\n' % (EDITOR, muttfilename, TMPFILENAME))
 
             ## parsing header only to get From and To
@@ -255,7 +265,7 @@ if __name__ == "__main__":
                     log.write('found modified From [%s]; *not* re-writing email\n' % (emailheadercomponents['from']))
             else:
                 log.write('found no matching RECIPIENT_ADDRESS and MYNEWFROMADDRESS; *not* re-writing email\n')
-                
+
             log.write('calling EDITOR ...\n')
             #call([EDITOR, EDITORPARAMS, muttfilename])
             call([EDITOR, muttfilename])
@@ -265,7 +275,7 @@ if __name__ == "__main__":
 
 
         except KeyboardInterrupt:
-    
+
             pass
 
         os.remove(LOGFILENAME) ## delete it if no error happened!
