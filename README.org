@@ -1,5 +1,5 @@
 ## -*- coding: utf-8;mode: org;  -*-
-## Time-stamp: <2015-02-06 19:19:10 vk>
+## Time-stamp: <2016-08-29 18:13:55 karl.voit>
 ## This file is best viewed with GNU Emacs Org-mode: http://orgmode.org/
 
 * Modifying FROM-email address in mutt emails
@@ -11,15 +11,15 @@ Let's take a look at an example Org-contacts entry which looks like that:
 
 : ** Bob Simpson                :research:chi09:BobSimpson:
 : :PROPERTIES:
-: :TYPE: 
+: :TYPE:
 : :TITLE: Dr.
 : :EMAIL: Bob.Simpson@example.com
 : :oldEMAIL: Bob.Simpson@outdated.example.com
 : :URL: http://example.com/bob
-: :MOBILE: 
-: :HOMEPHONE: 
-: :WORKPHONE: 
-: :PHONE: 
+: :MOBILE:
+: :HOMEPHONE:
+: :WORKPHONE:
+: :PHONE:
 : :COMPANY: This cool research company
 : :STREET: 42 Weirdstreet
 : :POSTALCODE: 12345
@@ -28,18 +28,18 @@ Let's take a look at an example Org-contacts entry which looks like that:
 : :PHOTOGRAPH: [[photo:BobSimpson.jpg]]
 : :BORN: 1970-12-31
 : :ITOLDTHEM_EMAIL: chi09@MY-DOMAIN.at
-: :ITOLDTHEM_ADDRESS: 
-: :ITOLDTHEM_PHONE: 
+: :ITOLDTHEM_ADDRESS:
+: :ITOLDTHEM_PHONE:
 : :ADDRESS_CHANGE_METHOD: email
 : :CREATED:  [2015-01-30 Fri 17:51]
 : :END:
-: 
+:
 : - first contact: CHI conference 2009
 :   - we had a nice lunch time together
 
 Whenever I write an email to Bob (property ~:EMAIL:~), I would like to
 use ~chi09@MY-DOMAIN.at~ (property ~:ITOLDTHEM_EMAIL:~) instead of my
-standard email address. 
+standard email address.
 
 This way, I can give away contact-specific email addresses. That's
 quite handy when you've got a [[https://en.wikipedia.org/wiki/Catch-all][catch-all email domain]] or you are using
@@ -79,3 +79,14 @@ your requirements:
 - ~DEFAULT_EMAIL_ADDRESS~: your default email address
 - ~EDITOR~: your default editor
 
+
+* How to Thank Me
+
+I'm glad you like my tools. If you want to support me:
+
+- Send old-fashioned *postcard* per snailmail - I love personal feedback!
+  - see [[http://tinyurl.com/j6w8hyo][my address]]
+- Send feature wishes or improvements as an issue on GitHub
+- Create issues on GitHub for bugs
+- Contribute merge requests for bug fixes
+- Check out my other cool [[https://github.com/novoid][projects on GitHub]]
