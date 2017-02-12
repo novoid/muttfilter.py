@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8; mode: python; -*-
 # Time-stamp: <2015-02-06 19:33:36 vk>
 
