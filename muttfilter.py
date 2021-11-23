@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8; mode: python; -*-
 # Time-stamp: <2015-02-06 19:33:36 vk>
 
@@ -12,14 +12,14 @@ import codecs
 from subprocess import call
 from shutil import move
 
-PROG_VERSION_NUMBER = u"0.3"
-PROG_VERSION_DATE = u"2015-02-06"
+PROG_VERSION_NUMBER = "0.4"
+PROG_VERSION_DATE = "2021-11-23"
 
-EPILOG = u"Modifying FROM-email address in mutt emails if corresponding org-contact \n\
+EPILOG = "Modifying FROM-email address in mutt emails if corresponding org-contact \n\
 entry has a different from-address associated. Please refer to \n\
 https://github.com/novoid/muttfilter.py > README.org for usage and more information.\n\
 \n\
-  :copyright:  (c) 2015 and following by Karl Voit <tools@Karl-Voit.at>\n\
+  :copyright:  (c) 2021 and following by Karl Voit <tools@Karl-Voit.at>\n\
   :license:    GPL v3 or any later version\n\
   :URL:       \n\
   :bugreports: via github (preferred) or <tools@Karl-Voit.at>\n\
@@ -38,7 +38,7 @@ ORGCONTACTSFILE = HOME + "/org/contacts.org"  # Path to the org-mode file contai
 ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS = ":EMAIL:"  # Looking for this property in Org-mode files to gather email addresses for contacts
 ORGCONTACTS_PROPERTY_OLD_RECIPIENT_ADDRESS = ":OLDEMAIL:"  # same as ORGCONTACTS_PROPERTY_RECIPIENT_ADDRESS but for outdated addresses
 ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS = ":ITOLDTHEM_EMAIL:"  # these property values holds my own email address I use to contact this contact
-DEFAULT_EMAIL_ADDRESS = u"mail" + u"@" + u"Ka" + u"rl" + u"-Vo" + u"it.at"  # use this email address when ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS is empty
+DEFAULT_EMAIL_ADDRESS = "mail" + "@" + "Ka" + "rl" + "-Vo" + "it.at"  # use this email address when ORGCONTACTS_PROPERTY_MYNEWFROMADDRESS is empty
 
 ## please configure vimrc for filetype mail accordingly:
 EDITOR = os.environ.get('EDITOR', 'vim')
@@ -48,7 +48,7 @@ EDITORPARAMS = "+'/^$/+1'"
 EDITORPARAMS = '+\'/^\$/+1\''
 
 ## FIXXME: fix RegEx to match FIRST email address; for now, it gets last one!
-FIRSTEMAILADDRESS = re.compile(u'(.*[< ])?(.+)@([^> ]+)([> ].*)?', flags=re.U)
+FIRSTEMAILADDRESS = re.compile('(.*[< ])?(.+)@([^> ]+)([> ].*)?', flags=re.U)
 
 
 def error_exit(muttemailfilename, errorcode, message):
@@ -62,8 +62,8 @@ def error_exit(muttemailfilename, errorcode, message):
         ## replacing tmpfile with log:
         replaceFileWithOther(log, muttemailfilename, LOGFILENAME)
     else:
-        print '\nERROR ' + str(errorcode) + ': ' + message + '\n\n'
-        print EPILOG
+        print('\nERROR ' + str(errorcode) + ': ' + message + '\n\n')
+        print(EPILOG)
         stdout.flush()
 
     exit(errorcode)
@@ -95,7 +95,7 @@ def parseEmailHeader(log, emailfile):
     for inputline in codecs.open(emailfile, 'r', encoding='utf-8'):
 
             if inputline == '\n':
-                if 'from' in header.keys() and 'to' in header.keys():
+                if 'from' in list(header.keys()) and 'to' in list(header.keys()):
                     log.write('found \"from\" and \"to\" in header\n')
                     return header
                 else:
@@ -177,7 +177,7 @@ def rewriteEmail(log, muttfilename, tempfilename, itoldthem_email):
         for inputline in codecs.open(muttfilename, 'r', encoding='utf-8'):
                 if inputline.startswith("From: "):
                         output.write('From: ' + itoldthem_email + '\n')
-                        output.write(u'X-muttfilter: changed From-address to: ' + itoldthem_email + '\n')
+                        output.write('X-muttfilter: changed From-address to: ' + itoldthem_email + '\n')
                 else:
                     ## write unmodified
                     output.write(inputline)
@@ -198,7 +198,7 @@ def replaceFileWithOther(log, filetooverwrite, replacement):
         dst_dirname = os.path.dirname(filetooverwrite)
         os.rename(replacement, os.path.join(src_dirname, dst_basename))
         move(os.path.join(src_dirname, dst_basename), dst_dirname)
-    except Exception, e:
+    except Exception as e:
         log.write("Rename failed: %s\n" % e)
     log.write('renamed replacement to filetooverwrite\n')
 

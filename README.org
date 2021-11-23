@@ -55,7 +55,7 @@ usually contains the line:
 
 If you replace this line by ...
 
-: set editor="/usr/bin/python /home/USER/bin/muttfilter.py"
+: set editor="/usr/bin/python3 /home/USER/bin/muttfilter.py"
 
 ... you can use this script as a wrapper function. It parses your
 Org-mode file for contacts, extracts their email addresses, and your
